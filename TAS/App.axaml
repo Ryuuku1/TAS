@@ -1,0 +1,28 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="TAS.App"
+             RequestedThemeVariant="Light">
+  <Application.Styles>
+    <FluentTheme />
+    <StyleInclude Source="avares://TAS/Styles/Theme.axaml" />
+  </Application.Styles>
+
+  <TrayIcon.Icons>
+    <TrayIcons>
+      <TrayIcon IsVisible="True"
+                Clicked="OnTrayIconClicked"
+                ToolTipText="TAS">
+        <TrayIcon.Menu>
+          <NativeMenu>
+            <NativeMenuItem Header="Open TAS" Click="OnOpenControlCenterClicked" />
+            <NativeMenuItemSeparator />
+            <NativeMenuItem Header="Start Now" Click="OnStartNowClicked" />
+            <NativeMenuItem Header="Stop Now" Click="OnStopNowClicked" />
+            <NativeMenuItemSeparator />
+            <NativeMenuItem Header="Exit" Click="OnExitClicked" />
+          </NativeMenu>
+        </TrayIcon.Menu>
+      </TrayIcon>
+    </TrayIcons>
+  </TrayIcon.Icons>
+</Application>

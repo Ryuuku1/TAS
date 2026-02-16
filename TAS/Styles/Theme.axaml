@@ -1,0 +1,301 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <Styles.Resources>
+    <Color x:Key="WatchShellTop">#F7FFFC</Color>
+    <Color x:Key="WatchShellBottom">#EAF7F1</Color>
+    <Color x:Key="WatchBorder">#CFE7DE</Color>
+
+    <Color x:Key="DialOuterStart">#CEEFE3</Color>
+    <Color x:Key="DialOuterEnd">#B8E2D4</Color>
+    <Color x:Key="DialInnerFill">#F9FFFC</Color>
+    <Color x:Key="DialInnerBorder">#D0E7DE</Color>
+
+    <Color x:Key="StartColor">#169B73</Color>
+    <Color x:Key="StopColor">#DB5B70</Color>
+
+    <Color x:Key="AccentColor">#169B73</Color>
+    <Color x:Key="AccentHoverColor">#11815F</Color>
+    <Color x:Key="NeutralColor">#EAF4F0</Color>
+    <Color x:Key="NeutralHoverColor">#DCEBE5</Color>
+    <Color x:Key="DangerColor">#DC5D71</Color>
+    <Color x:Key="DangerHoverColor">#BE4E5F</Color>
+
+    <Color x:Key="TintLight">#F0FAF6</Color>
+    <Color x:Key="TintBorder">#D5EAE2</Color>
+    <Color x:Key="TintChipBg">#E8F8F1</Color>
+    <Color x:Key="TintChipBorder">#BCE7D7</Color>
+    <Color x:Key="TickColor">#AACFC2</Color>
+    <Color x:Key="CenterCardBg">#FAFFFD</Color>
+    <Color x:Key="CenterCardBorder">#D6ECE4</Color>
+    <Color x:Key="SubtleText">#678378</Color>
+
+    <SolidColorBrush x:Key="AccentBrush" Color="{DynamicResource AccentColor}" />
+    <SolidColorBrush x:Key="NeutralBrush" Color="{DynamicResource NeutralColor}" />
+    <SolidColorBrush x:Key="DangerBrush" Color="{DynamicResource DangerColor}" />
+    <SolidColorBrush x:Key="TintLightBrush" Color="{DynamicResource TintLight}" />
+    <SolidColorBrush x:Key="TintBorderBrush" Color="{DynamicResource TintBorder}" />
+    <SolidColorBrush x:Key="TintChipBgBrush" Color="{DynamicResource TintChipBg}" />
+    <SolidColorBrush x:Key="TintChipBorderBrush" Color="{DynamicResource TintChipBorder}" />
+    <SolidColorBrush x:Key="TickBrush" Color="{DynamicResource TickColor}" />
+    <SolidColorBrush x:Key="CenterCardBgBrush" Color="{DynamicResource CenterCardBg}" />
+    <SolidColorBrush x:Key="CenterCardBorderBrush" Color="{DynamicResource CenterCardBorder}" />
+    <SolidColorBrush x:Key="SubtleTextBrush" Color="{DynamicResource SubtleText}" />
+    <SolidColorBrush x:Key="StartBrush" Color="{DynamicResource StartColor}" />
+  </Styles.Resources>
+
+  <Style Selector="Window.shell-window">
+    <Setter Property="FontFamily" Value="SF Pro Display, Nunito Sans, Segoe UI" />
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+
+  <Style Selector="Border.watch-shell">
+    <Setter Property="Width" Value="732" />
+    <Setter Property="Height" Value="732" />
+    <Setter Property="CornerRadius" Value="366" />
+    <Setter Property="ClipToBounds" Value="True" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+    <Setter Property="Background">
+      <RadialGradientBrush Center="0.52,0.44" GradientOrigin="0.52,0.44" RadiusX="90%" RadiusY="90%">
+        <GradientStop Color="{DynamicResource WatchShellTop}" Offset="0" />
+        <GradientStop Color="{DynamicResource WatchShellBottom}" Offset="1" />
+      </RadialGradientBrush>
+    </Setter>
+  </Style>
+
+  <Style Selector="Border.drag-zone">
+    <Setter Property="Background" Value="#01000000" />
+    <Setter Property="CornerRadius" Value="24" />
+    <Setter Property="MinHeight" Value="38" />
+  </Style>
+
+  <Style Selector="TextBlock.watch-title">
+    <Setter Property="Foreground" Value="#1F322B" />
+    <Setter Property="FontSize" Value="26" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+
+  <Style Selector="Border.status-chip">
+    <Setter Property="CornerRadius" Value="999" />
+    <Setter Property="Padding" Value="13,6" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="Background" Value="{DynamicResource TintChipBgBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource TintChipBorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+  </Style>
+
+  <Style Selector="TextBlock.status-chip-text">
+    <Setter Property="Foreground" Value="#1E5C49" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="FontSize" Value="12" />
+  </Style>
+
+  <Style Selector="Ellipse.dial-ring-outer">
+    <Setter Property="StrokeThickness" Value="28" />
+    <Setter Property="Stroke">
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="{DynamicResource DialOuterStart}" Offset="0" />
+        <GradientStop Color="{DynamicResource DialOuterEnd}" Offset="1" />
+      </LinearGradientBrush>
+    </Setter>
+    <Setter Property="Fill" Value="#F6FFFB" />
+  </Style>
+
+  <Style Selector="Ellipse.dial-ring-inner">
+    <Setter Property="StrokeThickness" Value="1" />
+    <Setter Property="Stroke" Value="{DynamicResource DialInnerBorder}" />
+    <Setter Property="Fill" Value="{DynamicResource DialInnerFill}" />
+  </Style>
+
+  <Style Selector="Ellipse.dial-tick">
+    <Setter Property="Fill" Value="{DynamicResource TickBrush}" />
+  </Style>
+
+  <Style Selector="Ellipse.start-handle">
+    <Setter Property="Fill" Value="{DynamicResource StartColor}" />
+    <Setter Property="Stroke" Value="#EBFBF5" />
+    <Setter Property="StrokeThickness" Value="3" />
+    <Setter Property="Cursor" Value="Hand" />
+  </Style>
+
+  <Style Selector="Ellipse.stop-handle">
+    <Setter Property="Fill" Value="{DynamicResource StopColor}" />
+    <Setter Property="Stroke" Value="#FFF1F3" />
+    <Setter Property="StrokeThickness" Value="3" />
+    <Setter Property="Cursor" Value="Hand" />
+  </Style>
+
+  <Style Selector="Border.dial-center-card">
+    <Setter Property="CornerRadius" Value="156" />
+    <Setter Property="Background" Value="{DynamicResource CenterCardBgBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource CenterCardBorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+  </Style>
+
+  <Style Selector="TextBlock.center-title">
+    <Setter Property="Foreground" Value="#21362F" />
+    <Setter Property="FontSize" Value="19" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+
+  <Style Selector="TextBlock.center-subtitle">
+    <Setter Property="Foreground" Value="{DynamicResource SubtleTextBrush}" />
+    <Setter Property="FontSize" Value="12" />
+  </Style>
+
+  <Style Selector="Border.state-indicator">
+    <Setter Property="Padding" Value="8,4" />
+    <Setter Property="CornerRadius" Value="999" />
+    <Setter Property="BorderThickness" Value="1" />
+  </Style>
+
+  <Style Selector="Border.state-indicator-running">
+    <Setter Property="Background" Value="{DynamicResource TintChipBgBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource TintChipBorderBrush}" />
+  </Style>
+
+  <Style Selector="Border.state-indicator-stopped">
+    <Setter Property="Background" Value="#FFF3F5" />
+    <Setter Property="BorderBrush" Value="#F1CCD3" />
+  </Style>
+
+  <Style Selector="TextBlock.state-indicator-text">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="Foreground" Value="#2B433A" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+
+  <Style Selector="Ellipse.state-indicator-dot-running">
+    <Setter Property="Fill" Value="{DynamicResource StartBrush}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+
+  <Style Selector="Ellipse.state-indicator-dot-stopped">
+    <Setter Property="Fill" Value="#DB5B70" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+
+  <Style Selector="Border.time-pill">
+    <Setter Property="CornerRadius" Value="16" />
+    <Setter Property="Padding" Value="9,7" />
+    <Setter Property="Background" Value="{DynamicResource TintLightBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource TintBorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+  </Style>
+
+  <Style Selector="TextBlock.dial-time-label">
+    <Setter Property="Foreground" Value="{DynamicResource SubtleTextBrush}" />
+    <Setter Property="FontSize" Value="11" />
+  </Style>
+
+  <Style Selector="TextBlock.dial-time-value">
+    <Setter Property="Foreground" Value="#234439" />
+    <Setter Property="FontSize" Value="17" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+
+  <Style Selector="CheckBox.timer-toggle">
+    <Setter Property="Foreground" Value="#2B433A" />
+    <Setter Property="FontSize" Value="12" />
+  </Style>
+
+  <Style Selector="TextBlock.summary-text">
+    <Setter Property="Foreground" Value="#3A5A50" />
+    <Setter Property="FontSize" Value="11.8" />
+  </Style>
+
+  <Style Selector="Border.error-box">
+    <Setter Property="CornerRadius" Value="12" />
+    <Setter Property="Padding" Value="8" />
+    <Setter Property="Background" Value="#FFF3F5" />
+    <Setter Property="BorderBrush" Value="#F1CCD3" />
+    <Setter Property="BorderThickness" Value="1" />
+  </Style>
+
+  <Style Selector="TextBlock.error-text">
+    <Setter Property="Foreground" Value="#A24654" />
+    <Setter Property="FontSize" Value="11.8" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+
+  <Style Selector="TextBlock.footer-note">
+    <Setter Property="Foreground" Value="#688378" />
+    <Setter Property="FontSize" Value="12" />
+  </Style>
+
+  <Style Selector="Button.accent-btn">
+    <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+    <Setter Property="Foreground" Value="White" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="11,8" />
+    <Setter Property="CornerRadius" Value="999" />
+  </Style>
+
+  <Style Selector="Button.accent-btn:pointerover">
+    <Setter Property="Background" Value="{DynamicResource AccentHoverColor}" />
+  </Style>
+
+  <Style Selector="Button.neutral-btn">
+    <Setter Property="Background" Value="{DynamicResource NeutralBrush}" />
+    <Setter Property="Foreground" Value="#294338" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="11,8" />
+    <Setter Property="CornerRadius" Value="999" />
+  </Style>
+
+  <Style Selector="Button.neutral-btn:pointerover">
+    <Setter Property="Background" Value="{DynamicResource NeutralHoverColor}" />
+  </Style>
+
+  <Style Selector="Button.ghost-btn">
+    <Setter Property="Background" Value="#EAF5F0" />
+    <Setter Property="Foreground" Value="#2E4E43" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="10,7" />
+    <Setter Property="CornerRadius" Value="999" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+  </Style>
+
+  <Style Selector="Button.ghost-btn:pointerover">
+    <Setter Property="Background" Value="#DDEDE6" />
+  </Style>
+
+  <Style Selector="Button.mini-btn">
+    <Setter Property="MinWidth" Value="74" />
+  </Style>
+
+  <Style Selector="Button.danger-btn">
+    <Setter Property="Background" Value="{DynamicResource DangerBrush}" />
+    <Setter Property="Foreground" Value="White" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="12,8" />
+    <Setter Property="CornerRadius" Value="999" />
+  </Style>
+
+  <Style Selector="Button.danger-btn:pointerover">
+    <Setter Property="Background" Value="{DynamicResource DangerHoverColor}" />
+  </Style>
+
+  <Style Selector="Button.exit-btn">
+    <Setter Property="MinWidth" Value="0" />
+    <Setter Property="HorizontalAlignment" Value="Center" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Foreground" Value="#3F5E53" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Padding" Value="10,4" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+  </Style>
+
+  <Style Selector="Button.exit-btn:pointerover">
+    <Setter Property="Background" Value="#16000000" />
+    <Setter Property="CornerRadius" Value="999" />
+  </Style>
+</Styles>

@@ -1,0 +1,488 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:TAS.ViewModels"
+        x:Class="TAS.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Width="732"
+        Height="732"
+        MinWidth="732"
+        MinHeight="732"
+        CanResize="False"
+        Title="{Binding WindowTitle}"
+        ShowInTaskbar="True"
+        Classes="shell-window"
+        Background="Transparent"
+        TransparencyLevelHint="Transparent"
+        TransparencyBackgroundFallback="Transparent"
+        SystemDecorations="None"
+        ExtendClientAreaToDecorationsHint="False">
+  <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+    <Border Classes="watch-shell"
+            PointerPressed="OnTitleBarPointerPressed">
+      <Grid>
+
+      <!-- ═══ Dial view: Real TAS or Tracker dial ═══ -->
+      <Grid RowDefinitions="Auto,*,Auto" Margin="24"
+            IsVisible="{Binding ShowDialView}">
+
+        <!-- Row 0: Header area -->
+        <Grid Grid.Row="0" Margin="6,4,6,0">
+          <!-- TAS status chip (normal mode) -->
+          <Grid ColumnDefinitions="Auto,*,Auto" IsVisible="{Binding IsNotDisguised}">
+            <TextBlock Grid.Column="0"
+                       Text="{Binding OperatingSystemText}"
+                       FontSize="12"
+                       Foreground="{DynamicResource SubtleTextBrush}"
+                       VerticalAlignment="Center" />
+            <Border Grid.Column="2" Classes="status-chip">
+              <TextBlock Text="{Binding StatusText}" Classes="status-chip-text" />
+            </Border>
+          </Grid>
+          <!-- Tracker header (tracker dial mode) -->
+          <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding ShowTrackerView}">
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+              <TextBlock Text="Time Tracker"
+                         FontSize="15" FontWeight="SemiBold"
+                         Foreground="#1F322B" VerticalAlignment="Center" />
+              <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                <Ellipse Width="12" Height="12" Fill="#A8D8C0" Stroke="#80C4A4" StrokeThickness="1"
+                         Cursor="Hand" PointerPressed="OnThemeGreenClicked" />
+                <Ellipse Width="12" Height="12" Fill="#A8C8E8" Stroke="#80AACC" StrokeThickness="1"
+                         Cursor="Hand" PointerPressed="OnThemeBlueClicked" />
+                <Ellipse Width="12" Height="12" Fill="#E8B8C0" Stroke="#D09CA4" StrokeThickness="1"
+                         Cursor="Hand" PointerPressed="OnThemeRoseClicked" />
+                <Ellipse Width="12" Height="12" Fill="#C8C8C8" Stroke="#ABABAB" StrokeThickness="1"
+                         Cursor="Hand" PointerPressed="OnThemeGrayClicked" />
+              </StackPanel>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+              <TextBlock Text="{Binding ClockTimeText}"
+                         FontSize="13" Foreground="{DynamicResource SubtleTextBrush}" VerticalAlignment="Center" />
+              <Border Classes="status-chip" Padding="6,2">
+                <TextBlock Text="{Binding TodayTotal}"
+                           FontSize="11" FontWeight="Bold" Foreground="{DynamicResource StartBrush}" />
+              </Border>
+            </StackPanel>
+          </Grid>
+        </Grid>
+
+        <!-- Row 1: Shared dial canvas -->
+        <Grid Grid.Row="1" Margin="0,10,0,6">
+          <Canvas x:Name="DialCanvas"
+                  Width="500"
+                  Height="500"
+                  HorizontalAlignment="Center"
+                  VerticalAlignment="Center"
+                  PointerMoved="OnDialPointerMoved"
+                  PointerReleased="OnDialPointerReleased">
+            <Ellipse Width="500" Height="500" Classes="dial-ring-outer" />
+            <Ellipse Width="430" Height="430" Canvas.Left="35" Canvas.Top="35" Classes="dial-ring-inner" />
+
+            <Ellipse Width="8" Height="8" Canvas.Left="246" Canvas.Top="14" Classes="dial-tick" />
+            <Ellipse Width="8" Height="8" Canvas.Left="361" Canvas.Top="45" Classes="dial-tick" />
+            <Ellipse Width="8" Height="8" Canvas.Left="445" Canvas.Top="130" Classes="dial-tick" />
+            <Ellipse Width="8" Height="8" Canvas.Left="478" Canvas.Top="246" Classes="dial-tick" />
+            <Ellipse Width="8" Height="8" Canvas.Left="445" Canvas.Top="361" Classes="dial-tick" />
+            <Ellipse Width="8" Height="8" Canvas.Left="361" Canvas.Top="445" Classes="dial-tick" />
+            <Ellipse Width="8" Height="8" Canvas.Left="246" Canvas.Top="478" Classes="dial-tick" />
+            <Ellipse Width="8" Height="8" Canvas.Left="130" Canvas.Top="445" Classes="dial-tick" />
+            <Ellipse Width="8" Height="8" Canvas.Left="45" Canvas.Top="361" Classes="dial-tick" />
+            <Ellipse Width="8" Height="8" Canvas.Left="14" Canvas.Top="246" Classes="dial-tick" />
+            <Ellipse Width="8" Height="8" Canvas.Left="45" Canvas.Top="130" Classes="dial-tick" />
+            <Ellipse Width="8" Height="8" Canvas.Left="130" Canvas.Top="45" Classes="dial-tick" />
+
+            <Ellipse x:Name="StartHandle"
+                     Width="26" Height="26"
+                     Classes="start-handle"
+                     PointerPressed="OnStartHandlePressed" />
+
+            <Ellipse x:Name="StopHandle"
+                     Width="26" Height="26"
+                     Classes="stop-handle"
+                     PointerPressed="OnStopHandlePressed" />
+
+            <!-- Center card -->
+            <Border x:Name="CenterCard"
+                    Canvas.Left="92" Canvas.Top="84"
+                    Width="316" Height="332"
+                    Classes="dial-center-card">
+              <Grid>
+
+                <!-- ── TAS controls (normal mode) ── -->
+                <StackPanel Margin="18,16,18,14" Spacing="8"
+                            IsVisible="{Binding IsNotDisguised}">
+                  <TextBlock Text="Drag the handles to set times."
+                             HorizontalAlignment="Center"
+                             Classes="center-subtitle" />
+                  <Grid HorizontalAlignment="Center">
+                    <Border IsVisible="{Binding IsRunning}" Classes="state-indicator state-indicator-running">
+                      <StackPanel Orientation="Horizontal" Spacing="6">
+                        <Ellipse Width="8" Height="8" Classes="state-indicator-dot-running" />
+                        <TextBlock Text="RUNNING" Classes="state-indicator-text" />
+                      </StackPanel>
+                    </Border>
+                    <Border IsVisible="{Binding IsNotRunning}" Classes="state-indicator state-indicator-stopped">
+                      <StackPanel Orientation="Horizontal" Spacing="6">
+                        <Ellipse Width="8" Height="8" Classes="state-indicator-dot-stopped" />
+                        <TextBlock Text="STOPPED" Classes="state-indicator-text" />
+                      </StackPanel>
+                    </Border>
+                  </Grid>
+
+                  <Grid ColumnDefinitions="*,*" Margin="0,2,0,0">
+                    <Border Grid.Column="0" Margin="0,0,6,0" Classes="time-pill">
+                      <StackPanel Spacing="2">
+                        <TextBlock Text="Start" HorizontalAlignment="Center" Classes="dial-time-label" />
+                        <TextBox Text="{Binding StartTimeText}"
+                                 HorizontalAlignment="Center"
+                                 VerticalAlignment="Center"
+                                 FontSize="17" FontWeight="SemiBold"
+                                 Foreground="#234439"
+                                 TextAlignment="Center"
+                                 HorizontalContentAlignment="Center"
+                                 VerticalContentAlignment="Center"
+                                 BorderThickness="0" Background="Transparent"
+                                 Padding="2,2"
+                                 Height="26"
+                                 MinWidth="60" MaxWidth="70" />
+                      </StackPanel>
+                    </Border>
+                    <Border Grid.Column="1" Margin="6,0,0,0" Classes="time-pill">
+                      <StackPanel Spacing="2">
+                        <TextBlock Text="Stop" HorizontalAlignment="Center" Classes="dial-time-label" />
+                        <TextBox Text="{Binding StopTimeText}"
+                                 HorizontalAlignment="Center"
+                                 VerticalAlignment="Center"
+                                 FontSize="17" FontWeight="SemiBold"
+                                 Foreground="#234439"
+                                 TextAlignment="Center"
+                                 HorizontalContentAlignment="Center"
+                                 VerticalContentAlignment="Center"
+                                 BorderThickness="0" Background="Transparent"
+                                 Padding="2,2"
+                                 Height="26"
+                                 MinWidth="60" MaxWidth="70" />
+                      </StackPanel>
+                    </Border>
+                  </Grid>
+
+                  <Grid ColumnDefinitions="*,*">
+                    <CheckBox Grid.Column="0" Content="Start timer"
+                              Classes="timer-toggle"
+                              IsChecked="{Binding IsStartTimerEnabled}" />
+                    <CheckBox Grid.Column="1" Margin="10,0,0,0"
+                              Content="Stop timer"
+                              Classes="timer-toggle"
+                              IsChecked="{Binding IsStopTimerEnabled}" />
+                  </Grid>
+
+                  <Grid ColumnDefinitions="*,*">
+                    <Button Grid.Column="0" Content="Start now"
+                            Classes="accent-btn"
+                            IsEnabled="{Binding IsNotRunning}"
+                            Click="OnStartNowClicked" />
+                    <Button Grid.Column="1" Margin="10,0,0,0"
+                            Content="Stop now"
+                            Classes="neutral-btn"
+                            IsEnabled="{Binding IsRunning}"
+                            Click="OnStopNowClicked" />
+                  </Grid>
+
+                  <Grid ColumnDefinitions="*,*">
+                    <Button Grid.Column="0" Content="Apply timer"
+                            Classes="accent-btn"
+                            Click="OnApplyScheduleClicked" />
+                    <Button Grid.Column="1" Margin="10,0,0,0"
+                            Content="Clear timer"
+                            Classes="neutral-btn"
+                            Click="OnClearScheduleClicked" />
+                  </Grid>
+
+                  <TextBlock Text="{Binding ScheduleSummary}"
+                             TextWrapping="Wrap" HorizontalAlignment="Center"
+                             TextAlignment="Center" Classes="summary-text" />
+
+                  <Border Classes="error-box" IsVisible="{Binding HasValidationMessage}">
+                    <TextBlock Text="{Binding ValidationMessage}"
+                               TextWrapping="Wrap" TextAlignment="Center"
+                               Classes="error-text" />
+                  </Border>
+                </StackPanel>
+
+                <!-- ── Tracker dial controls (tracker view in disguise) ── -->
+                <Grid Margin="16,12,16,10"
+                      RowDefinitions="Auto,Auto,Auto,Auto,*,Auto"
+                      IsVisible="{Binding ShowTrackerView}">
+
+                  <TextBlock Grid.Row="0"
+                             Text="Drag handles to set time range."
+                             HorizontalAlignment="Center"
+                             TextAlignment="Center"
+                             Classes="center-subtitle" />
+
+                  <!-- From / To editable time inputs -->
+                  <Grid Grid.Row="1" ColumnDefinitions="*,26,*" Margin="4,10,4,0">
+                    <Border Grid.Column="0"
+                            CornerRadius="14"
+                            Background="{DynamicResource TintLightBrush}"
+                            BorderBrush="{DynamicResource TintBorderBrush}"
+                            BorderThickness="1"
+                            Padding="8,10">
+                      <StackPanel Spacing="3" HorizontalAlignment="Center">
+                        <TextBlock Text="From"
+                                   HorizontalAlignment="Center"
+                                   Classes="dial-time-label" />
+                        <TextBox Text="{Binding StartTimeText}"
+                                 HorizontalAlignment="Center"
+                                 VerticalAlignment="Center"
+                                 FontSize="17" FontWeight="SemiBold"
+                                 Foreground="#1F5C48"
+                                 TextAlignment="Center"
+                                 HorizontalContentAlignment="Center"
+                                 VerticalContentAlignment="Center"
+                                 BorderThickness="0" Background="Transparent"
+                                 Padding="2,2"
+                                 Height="26"
+                                 MinWidth="64" />
+                      </StackPanel>
+                    </Border>
+                    <TextBlock Grid.Column="1" Text="→"
+                               VerticalAlignment="Center" HorizontalAlignment="Center"
+                               FontSize="13" Foreground="{DynamicResource TickBrush}" />
+                    <Border Grid.Column="2"
+                            CornerRadius="14"
+                            Background="{DynamicResource TintLightBrush}"
+                            BorderBrush="{DynamicResource TintBorderBrush}"
+                            BorderThickness="1"
+                            Padding="8,10">
+                      <StackPanel Spacing="3" HorizontalAlignment="Center">
+                        <TextBlock Text="To"
+                                   HorizontalAlignment="Center"
+                                   Classes="dial-time-label" />
+                        <TextBox Text="{Binding StopTimeText}"
+                                 HorizontalAlignment="Center"
+                                 VerticalAlignment="Center"
+                                 FontSize="17" FontWeight="SemiBold"
+                                 Foreground="#1F5C48"
+                                 TextAlignment="Center"
+                                 HorizontalContentAlignment="Center"
+                                 VerticalContentAlignment="Center"
+                                 BorderThickness="0" Background="Transparent"
+                                 Padding="2,2"
+                                 Height="26"
+                                 MinWidth="64" />
+                      </StackPanel>
+                    </Border>
+                  </Grid>
+
+                  <!-- Duration -->
+                  <Border Grid.Row="2" Classes="state-indicator state-indicator-running"
+                          HorizontalAlignment="Center" Margin="0,6,0,0">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                      <TextBlock Text="Duration:" Classes="state-indicator-text" />
+                      <TextBlock Text="{Binding TrackerDuration}" Classes="state-indicator-text"
+                                 FontWeight="Bold" />
+                    </StackPanel>
+                  </Border>
+
+                  <!-- Task name input + Log -->
+                  <Grid Grid.Row="3" ColumnDefinitions="*,Auto" Margin="0,8,0,4">
+                    <TextBox Grid.Column="0" Watermark="Task name..."
+                             Text="{Binding NewTaskName}" FontSize="12"
+                             CornerRadius="8" Padding="6,5" Margin="0,0,4,0" />
+                    <Button Grid.Column="1" Content="Log"
+                            Classes="accent-btn" Padding="10,5"
+                            Click="OnAddTaskClicked" />
+                  </Grid>
+
+                  <!-- Logged task list -->
+                  <ScrollViewer Grid.Row="4" VerticalScrollBarVisibility="Auto">
+                     <ItemsControl ItemsSource="{Binding Tasks}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                          <Border Margin="0,2" Padding="7,6" CornerRadius="8"
+                                   Background="{DynamicResource TintLightBrush}" BorderBrush="{DynamicResource TintBorderBrush}" BorderThickness="1">
+                             <StackPanel Spacing="5">
+
+                               <!-- Row 1: task name -->
+                               <TextBox Text="{Binding Name}"
+                                        Height="22"
+                                        VerticalAlignment="Center"
+                                        HorizontalAlignment="Stretch"
+                                        VerticalContentAlignment="Center"
+                                        HorizontalContentAlignment="Left"
+                                        FontSize="11" Foreground="#234439"
+                                        CornerRadius="4" Padding="5,0" />
+
+                               <!-- Row 2: start time – end time  duration chip  save / remove -->
+                               <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,*,Auto,Auto">
+                                 <TextBox Grid.Column="0"
+                                          Text="{Binding StartTime}"
+                                          Width="52" Height="20"
+                                          VerticalAlignment="Center"
+                                          TextAlignment="Center"
+                                          HorizontalContentAlignment="Center"
+                                          VerticalContentAlignment="Center"
+                                          FontSize="10" FontWeight="SemiBold"
+                                          CornerRadius="4" Padding="3,0" />
+                                 <TextBlock Grid.Column="1" Text="–" VerticalAlignment="Center"
+                                            FontSize="9" Foreground="{DynamicResource SubtleTextBrush}"
+                                            Margin="4,0" />
+                                 <TextBox Grid.Column="2"
+                                          Text="{Binding EndTime}"
+                                          Width="52" Height="20"
+                                          VerticalAlignment="Center"
+                                          TextAlignment="Center"
+                                          HorizontalContentAlignment="Center"
+                                          VerticalContentAlignment="Center"
+                                          FontSize="10" FontWeight="SemiBold"
+                                          CornerRadius="4" Padding="3,0" />
+                                 <Border Grid.Column="3" CornerRadius="4" Padding="6,2"
+                                         Background="{DynamicResource TintChipBgBrush}"
+                                         BorderBrush="{DynamicResource TintChipBorderBrush}"
+                                         BorderThickness="1"
+                                         VerticalAlignment="Center" Margin="5,0,0,0">
+                                   <TextBlock Text="{Binding Duration}" FontSize="9"
+                                              FontWeight="Bold" Foreground="{DynamicResource StartBrush}" />
+                                 </Border>
+                                 <!-- spacer -->
+                                 <Button Grid.Column="5" Content="✓" Classes="accent-btn"
+                                         FontSize="9" Padding="5,2" MinWidth="0"
+                                         VerticalAlignment="Center" Margin="0,0,2,0"
+                                         Click="OnSaveTaskClicked" />
+                                 <Button Grid.Column="6" Content="✕" Classes="exit-btn"
+                                         FontSize="9" Padding="3,2" MinWidth="0"
+                                         VerticalAlignment="Center"
+                                         Click="OnRemoveTaskClicked" />
+                               </Grid>
+
+                             </StackPanel>
+                           </Border>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </ScrollViewer>
+
+                  <!-- Clear all + date -->
+                  <Grid Grid.Row="5" ColumnDefinitions="*,Auto" Margin="0,4,0,0">
+                    <TextBlock Grid.Column="0" Text="{Binding ClockDateText}"
+                               VerticalAlignment="Center"
+                               FontSize="10" Foreground="{DynamicResource TickBrush}" />
+                    <Button Grid.Column="1" Content="Clear all"
+                            Classes="neutral-btn" FontSize="10" Padding="8,3"
+                            Click="OnClearAllTasksClicked" />
+                  </Grid>
+                </Grid>
+
+              </Grid>
+            </Border>
+          </Canvas>
+        </Grid>
+
+        <!-- Row 2: Footer -->
+        <StackPanel Grid.Row="2" HorizontalAlignment="Center" Spacing="7" Margin="0,2,0,2">
+          <!-- TAS footer (normal mode) -->
+          <Button Content="Hide"
+                  IsVisible="{Binding IsNotDisguised}"
+                  HorizontalAlignment="Center"
+                  Classes="exit-btn"
+                  Click="OnHideClicked" />
+          <!-- Tracker footer -->
+          <StackPanel IsVisible="{Binding ShowTrackerView}"
+                      Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4">
+            <Button Content="⌚ Watch" Classes="exit-btn"
+                    Click="OnToggleTrackerViewClicked" />
+            <Button Content="Hide" Classes="exit-btn"
+                    Click="OnHideClicked" />
+            <Button Content="Close" Classes="exit-btn"
+                    Click="OnCloseClicked" />
+          </StackPanel>
+        </StackPanel>
+      </Grid>
+
+      <!-- ═══ Watch face view (disguise clock + task list) ═══ -->
+      <Grid IsVisible="{Binding ShowClockView}"
+            RowDefinitions="*,Auto" Margin="60,50,60,50">
+
+        <StackPanel Grid.Row="0" VerticalAlignment="Center" Spacing="6">
+          <!-- Big clock -->
+          <TextBlock Text="{Binding ClockTimeText}"
+                     HorizontalAlignment="Center"
+                     FontSize="68" FontWeight="Light"
+                     Foreground="#1F322B" LetterSpacing="2" />
+          <TextBlock Text="{Binding ClockDateText}"
+                     HorizontalAlignment="Center"
+                     FontSize="14" Foreground="{DynamicResource SubtleTextBrush}" />
+
+          <!-- Theme color dots -->
+          <StackPanel Orientation="Horizontal" Spacing="8"
+                      HorizontalAlignment="Center" Margin="0,4,0,0">
+            <Ellipse Width="18" Height="18" Fill="#A8D8C0" Stroke="#80C4A4" StrokeThickness="1.5"
+                     Cursor="Hand" PointerPressed="OnThemeGreenClicked" />
+            <Ellipse Width="18" Height="18" Fill="#A8C8E8" Stroke="#80AACC" StrokeThickness="1.5"
+                     Cursor="Hand" PointerPressed="OnThemeBlueClicked" />
+            <Ellipse Width="18" Height="18" Fill="#E8B8C0" Stroke="#D09CA4" StrokeThickness="1.5"
+                     Cursor="Hand" PointerPressed="OnThemeRoseClicked" />
+            <Ellipse Width="18" Height="18" Fill="#C8C8C8" Stroke="#ABABAB" StrokeThickness="1.5"
+                     Cursor="Hand" PointerPressed="OnThemeGrayClicked" />
+          </StackPanel>
+
+          <!-- Today's hours -->
+          <Border HorizontalAlignment="Center" Margin="0,4,0,4"
+                  Classes="status-chip" Padding="12,4">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <TextBlock Text="Today:" FontSize="12" FontWeight="SemiBold"
+                         Foreground="{DynamicResource SubtleTextBrush}" VerticalAlignment="Center" />
+              <TextBlock Text="{Binding TodayTotal}" FontSize="14" FontWeight="Bold"
+                         Foreground="{DynamicResource StartBrush}" VerticalAlignment="Center" />
+            </StackPanel>
+          </Border>
+
+          <!-- Task list for today -->
+          <Border Margin="0,0,0,0" Padding="10,6" CornerRadius="16"
+                  Background="{DynamicResource TintLightBrush}" BorderBrush="{DynamicResource TintBorderBrush}" BorderThickness="1"
+                  MaxHeight="220">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+              <ItemsControl ItemsSource="{Binding Tasks}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,3">
+                      <Ellipse Grid.Column="0" Width="6" Height="6"
+                               VerticalAlignment="Center" Margin="0,0,8,0"
+                               Fill="{DynamicResource StartBrush}" />
+                      <TextBlock Grid.Column="1" Text="{Binding Name}"
+                                 VerticalAlignment="Center" FontSize="12"
+                                 Foreground="#234439" TextTrimming="CharacterEllipsis" />
+                      <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding TimeRange}"
+                                   IsVisible="{Binding HasTimeRange}"
+                                   FontSize="10" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource SubtleTextBrush}" />
+                        <TextBlock Text="{Binding Duration}"
+                                   FontSize="11" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TickBrush}" />
+                      </StackPanel>
+                    </Grid>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </ScrollViewer>
+          </Border>
+        </StackPanel>
+
+        <!-- Watch footer -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal"
+                    HorizontalAlignment="Center" Spacing="4" Margin="0,8,0,0">
+          <Button Content="📋 Track" Classes="exit-btn"
+                  Click="OnToggleTrackerViewClicked" />
+          <Button Content="Hide" Classes="exit-btn"
+                  Click="OnHideClicked" />
+          <Button Content="Close" Classes="exit-btn"
+                  Click="OnCloseClicked" />
+        </StackPanel>
+      </Grid>
+
+      </Grid>
+    </Border>
+  </Grid>
+</Window>

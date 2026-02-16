@@ -1,0 +1,50 @@
+﻿<Properties GitUserInfo="UsingGIT" StartupConfiguration="{5630F52B-A0C6-4313-9D4D-927D98EEF41D}|Default">
+  <MultiItemStartupConfigurations />
+  <MonoDevelop.Ide.Workbench ActiveDocument="TAS.Application/Worker/MacOS/WorkerMacOS.cs">
+    <Files>
+      <File FileName="TAS/Program.cs" />
+      <File FileName="TAS/TAS.csproj" />
+      <File FileName="TAS.Application/Commands/DelayCommand.cs" />
+      <File FileName="TAS.Application/Commands/StartCommand.cs" />
+      <File FileName="TAS.Application/CommandHandlers/DelayCommandHandler.cs" />
+      <File FileName="TAS.Application/CommandHandlers/StartCommandHandler.cs" />
+      <File FileName="TAS.Application/CommandHandlers/StopCommandHandler.cs" />
+      <File FileName="TAS.Application/Commands/UntilCommand.cs" />
+      <File FileName="TAS.Application/Commands/StopCommand.cs" />
+      <File FileName="TAS.Application/CommandHandlers/UntilCommandHandler.cs" />
+      <File FileName="TAS.Application/Worker/MacOS/WorkerMacOS.cs" Line="48" Column="26" />
+      <File FileName="TAS.Application/Worker/Callbacks/Callbacks.cs" />
+      <File FileName="TAS.Infrastructure/Worker/Abstractions/IWorker.cs" />
+      <File FileName="TAS.Infrastructure/Worker/WorkerCallback.cs" />
+      <File FileName="TAS.Infrastructure/Worker/WorkerStatus.cs" />
+    </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State name="__root__">
+          <Node name="TAS" expanded="True" selected="True">
+            <Node name="TAS" expanded="True" />
+            <Node name="TAS.Application" expanded="True">
+              <Node name="CommandHandlers" expanded="True" />
+              <Node name="Commands" expanded="True" />
+              <Node name="Worker" expanded="True">
+                <Node name="Callbacks" expanded="True" />
+                <Node name="MacOS" expanded="True" />
+              </Node>
+            </Node>
+            <Node name="TAS.Infrastructure" expanded="True">
+              <Node name="Worker" expanded="True">
+                <Node name="Abstractions" expanded="True" />
+              </Node>
+            </Node>
+          </Node>
+        </State>
+      </Pad>
+    </Pads>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.ItemProperties.TAS PreferredExecutionTarget="MonoDevelop.Default" />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+</Properties>
