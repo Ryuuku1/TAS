@@ -16,15 +16,14 @@ public sealed class MainWindowViewModel : ObservableObject
     private readonly TaskStore _taskStore;
 
     private string _statusText;
-    private bool _isStartTimerEnabled;
-    private bool _isStopTimerEnabled;
     private string _startTimeText;
     private string _stopTimeText;
-    private string _scheduleSummary;
     private string _validationMessage;
     private bool _isRunning;
     private bool _isDisguised;
     private bool _isTrackerView;
+    private bool _useStopTime = true;
+    private bool _useStartTime = true;
     private string _clockTimeText = "";
     private string _clockDateText = "";
     private string _newTaskName = "";
@@ -40,7 +39,6 @@ public sealed class MainWindowViewModel : ObservableObject
         _statusText = ToDisplayStatus(_controller.Status);
         _startTimeText = DateTime.Now.ToString("HH:mm", CultureInfo.InvariantCulture);
         _stopTimeText = DateTime.Now.AddHours(1).ToString("HH:mm", CultureInfo.InvariantCulture);
-        _scheduleSummary = "No timers configured.";
         _validationMessage = string.Empty;
         _isRunning = IsRunningStatus(_controller.Status);
 
@@ -48,7 +46,7 @@ public sealed class MainWindowViewModel : ObservableObject
         _controller.ScheduleChanged += OnScheduleChanged;
         _controller.ErrorOccurred += OnControllerError;
 
-        ApplySnapshot(_controller.Schedule);
+        LoadAndApplyTimers();
     }
 
     public string StatusText
@@ -59,18 +57,7 @@ public sealed class MainWindowViewModel : ObservableObject
 
     public string OperatingSystemText => $"OS: {_controller.OperatingSystemName}";
 
-    public bool IsStartTimerEnabled
-    {
-        get => _isStartTimerEnabled;
-        set => SetProperty(ref _isStartTimerEnabled, value);
-    }
-
-    public bool IsStopTimerEnabled
-    {
-        get => _isStopTimerEnabled;
-        set => SetProperty(ref _isStopTimerEnabled, value);
-    }
-
+    public ObservableCollection<TimerSlotEntry> Timers { get; } = new();
     public string StartTimeText
     {
         get => _startTimeText;
@@ -93,12 +80,6 @@ public sealed class MainWindowViewModel : ObservableObject
                 OnPropertyChanged(nameof(TrackerDuration));
             }
         }
-    }
-
-    public string ScheduleSummary
-    {
-        get => _scheduleSummary;
-        private set => SetProperty(ref _scheduleSummary, value);
     }
 
     public string ValidationMessage
@@ -128,6 +109,18 @@ public sealed class MainWindowViewModel : ObservableObject
     }
 
     public bool IsNotRunning => !IsRunning;
+
+    public bool UseStopTime
+    {
+        get => _useStopTime;
+        set => SetProperty(ref _useStopTime, value);
+    }
+
+    public bool UseStartTime
+    {
+        get => _useStartTime;
+        set => SetProperty(ref _useStartTime, value);
+    }
 
     public bool IsDisguised
     {
@@ -492,37 +485,90 @@ public sealed class MainWindowViewModel : ObservableObject
         _controller.StopNow();
     }
 
-    public void ApplySchedule()
+    public void AddTimer()
     {
-        if (!TryBuildSchedule(out var configuration, out var error))
+        var hasStart = UseStartTime;
+        var hasStop = UseStopTime;
+
+        if (!hasStart && !hasStop)
         {
-            ValidationMessage = error;
+            ValidationMessage = "Enable at least a start or stop time.";
             return;
         }
 
-        try
+        TimeOnly? start = null;
+        TimeOnly? end = null;
+
+        if (hasStart)
         {
-            var snapshot = _controller.ApplySchedule(configuration);
-            ApplySnapshot(snapshot);
-            ValidationMessage = string.Empty;
+            if (!TryParseTime(StartTimeText, out var parsedStart))
+            {
+                ValidationMessage = "Invalid start time. Use HH:mm format (example: 08:30).";
+                return;
+            }
+
+            start = parsedStart;
         }
-        catch (Exception ex)
+
+        if (hasStop)
         {
-            ValidationMessage = $"Failed to apply timer: {ex.Message}";
+            if (!TryParseTime(StopTimeText, out var parsedEnd))
+            {
+                ValidationMessage = "Invalid stop time. Use HH:mm format (example: 17:45).";
+                return;
+            }
+
+            end = parsedEnd;
         }
+
+        if (start.HasValue && end.HasValue && start.Value >= end.Value)
+        {
+            ValidationMessage = "Stop time must be after start time.";
+            return;
+        }
+
+        foreach (var existing in Timers)
+        {
+            if (!existing.IsEnabled || !existing.HasEndTime || !existing.HasStartTime) continue;
+            if (!TryParseTime(existing.StartTime, out var exStart)) continue;
+            if (!TryParseTime(existing.EndTime, out var exEnd)) continue;
+            if (!start.HasValue || !end.HasValue) continue;
+
+            if (start.Value < exEnd && exStart < end.Value)
+            {
+                ValidationMessage = $"Overlaps with existing timer {existing.Summary}.";
+                return;
+            }
+        }
+
+        var startText = start?.ToString("HH:mm", CultureInfo.InvariantCulture) ?? string.Empty;
+        var endText = end?.ToString("HH:mm", CultureInfo.InvariantCulture) ?? string.Empty;
+        var entry = new TimerSlotEntry(startText, endText, isEnabled: true);
+        HookTimerSlot(entry);
+        Timers.Add(entry);
+        PersistAndApplyTimers();
+        ValidationMessage = string.Empty;
+    }
+
+    public void RemoveTimer(TimerSlotEntry slot)
+    {
+        Timers.Remove(slot);
+        PersistAndApplyTimers();
+        ValidationMessage = string.Empty;
     }
 
     public void ClearSchedule()
     {
+        Timers.Clear();
+        _taskStore.SaveTimerSlots([]);
         try
         {
-            var snapshot = _controller.ClearSchedule();
-            ApplySnapshot(snapshot);
+            _controller.ClearSchedule();
             ValidationMessage = string.Empty;
         }
         catch (Exception ex)
         {
-            ValidationMessage = $"Failed to clear timer: {ex.Message}";
+            ValidationMessage = $"Failed to clear timers: {ex.Message}";
         }
     }
 
@@ -533,13 +579,11 @@ public sealed class MainWindowViewModel : ObservableObject
 
     public void SetStartTimeFromDial(TimeOnly time)
     {
-        IsStartTimerEnabled = true;
         StartTimeText = time.ToString("HH:mm", CultureInfo.InvariantCulture);
     }
 
     public void SetStopTimeFromDial(TimeOnly time)
     {
-        IsStopTimerEnabled = true;
         StopTimeText = time.ToString("HH:mm", CultureInfo.InvariantCulture);
     }
 
@@ -548,43 +592,76 @@ public sealed class MainWindowViewModel : ObservableObject
         ValidationMessage = message;
     }
 
-    private bool TryBuildSchedule(out ScheduleConfiguration configuration, out string error)
+    private void LoadAndApplyTimers()
     {
-        error = string.Empty;
-        configuration = ScheduleConfiguration.Disabled;
-
-        TimeOnly? startTime = null;
-        TimeOnly? stopTime = null;
-
-        if (IsStartTimerEnabled)
+        Timers.Clear();
+        foreach (var (start, end, enabled) in _taskStore.LoadTimerSlots())
         {
-            if (!TryParseTime(StartTimeText, out var parsed))
-            {
-                error = "Invalid start time. Use HH:mm format (example: 08:30).";
-                return false;
-            }
-
-            startTime = parsed;
+            var entry = new TimerSlotEntry(start, end, enabled);
+            HookTimerSlot(entry);
+            Timers.Add(entry);
         }
 
-        if (IsStopTimerEnabled)
-        {
-            if (!TryParseTime(StopTimeText, out var parsed))
+        ApplyTimersToController();
+    }
+
+    private void PersistAndApplyTimers()
+    {
+        _taskStore.SaveTimerSlots(
+            Timers.Select(t => (t.StartTime, t.EndTime, t.IsEnabled)).ToList());
+        ApplyTimersToController();
+    }
+
+    private void ApplyTimersToController()
+    {
+        var slots = Timers
+            .Where(t => t.HasStartTime || t.HasEndTime)
+            .Select(t =>
             {
-                error = "Invalid stop time. Use HH:mm format (example: 17:45).";
-                return false;
-            }
+                TimeOnly? s = t.HasStartTime && TryParseTime(t.StartTime, out var parsedStart)
+                    ? parsedStart
+                    : null;
+                TimeOnly? e = t.HasEndTime && TryParseTime(t.EndTime, out var parsedEnd)
+                    ? parsedEnd
+                    : null;
+                return new TimerSlotConfiguration(s, e, t.IsEnabled);
+            })
+            .ToList();
 
-            stopTime = parsed;
+        var config = new ScheduleConfiguration(slots);
+        try
+        {
+            var snapshot = _controller.ApplySchedule(config);
+            UpdateNextRunTexts(snapshot);
+            ValidationMessage = string.Empty;
         }
+        catch (Exception ex)
+        {
+            ValidationMessage = ex.Message;
+        }
+    }
 
-        configuration = new ScheduleConfiguration(
-            StartEnabled: IsStartTimerEnabled,
-            StartTime: startTime,
-            StopEnabled: IsStopTimerEnabled,
-            StopTime: stopTime);
+    private void HookTimerSlot(TimerSlotEntry slot)
+    {
+        slot.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(TimerSlotEntry.IsEnabled))
+            {
+                PersistAndApplyTimers();
+            }
+        };
+    }
 
-        return true;
+    private void UpdateNextRunTexts(ScheduleSnapshot snapshot)
+    {
+        var count = Math.Min(Timers.Count, snapshot.Slots.Count);
+        for (var i = 0; i < count; i++)
+        {
+            var s = snapshot.Slots[i];
+            Timers[i].NextRunText = s.IsEnabled && s.NextStartAt.HasValue
+                ? $"next {s.NextStartAt.Value.ToString("ddd HH:mm", CultureInfo.InvariantCulture)}"
+                : string.Empty;
+        }
     }
 
     private static bool TryParseTime(string value, out TimeOnly result)
@@ -621,7 +698,7 @@ public sealed class MainWindowViewModel : ObservableObject
 
     private void OnScheduleChanged(ScheduleSnapshot snapshot)
     {
-        Dispatcher.UIThread.Post(() => { ApplySnapshot(snapshot); });
+        Dispatcher.UIThread.Post(() => { UpdateNextRunTexts(snapshot); });
     }
 
     private void OnControllerError(string message)
@@ -631,46 +708,7 @@ public sealed class MainWindowViewModel : ObservableObject
 
     private void ApplySnapshot(ScheduleSnapshot snapshot)
     {
-        IsStartTimerEnabled = snapshot.StartEnabled;
-        IsStopTimerEnabled = snapshot.StopEnabled;
-
-        if (snapshot.StartTime.HasValue)
-        {
-            StartTimeText = snapshot.StartTime.Value.ToString("HH:mm", CultureInfo.InvariantCulture);
-        }
-
-        if (snapshot.StopTime.HasValue)
-        {
-            StopTimeText = snapshot.StopTime.Value.ToString("HH:mm", CultureInfo.InvariantCulture);
-        }
-
-        ScheduleSummary = BuildScheduleSummary(snapshot);
-    }
-
-    private static string BuildScheduleSummary(ScheduleSnapshot snapshot)
-    {
-        if (!snapshot.StartEnabled && !snapshot.StopEnabled)
-        {
-            return "No timers configured.";
-        }
-
-        var nextStart = snapshot.NextStartAt.HasValue
-            ? snapshot.NextStartAt.Value.ToString("ddd HH:mm", CultureInfo.InvariantCulture)
-            : "--";
-
-        var nextStop = snapshot.NextStopAt.HasValue
-            ? snapshot.NextStopAt.Value.ToString("ddd HH:mm", CultureInfo.InvariantCulture)
-            : "--";
-
-        var startText = snapshot.StartEnabled && snapshot.StartTime.HasValue
-            ? $"Start: {snapshot.StartTime.Value:HH:mm} (next {nextStart})"
-            : "Start: disabled";
-
-        var stopText = snapshot.StopEnabled && snapshot.StopTime.HasValue
-            ? $"Stop: {snapshot.StopTime.Value:HH:mm} (next {nextStop})"
-            : "Stop: disabled";
-
-        return $"{startText} | {stopText}";
+        UpdateNextRunTexts(snapshot);
     }
 
     private static string ToDisplayStatus(WorkerStatus status)

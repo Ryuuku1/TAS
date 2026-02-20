@@ -42,6 +42,67 @@ public sealed class TaskStore : IDisposable
 
         EnsureColumn("tasks", "start_time", "TEXT NOT NULL DEFAULT ''");
         EnsureColumn("tasks", "end_time", "TEXT NOT NULL DEFAULT ''");
+        EnsureTimerSchema();
+    }
+
+    private void EnsureTimerSchema()
+    {
+        using var cmd = _connection.CreateCommand();
+        cmd.CommandText = """
+            CREATE TABLE IF NOT EXISTS timer_slots (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                start_time TEXT NOT NULL,
+                end_time TEXT NOT NULL,
+                is_enabled INTEGER NOT NULL DEFAULT 1,
+                sort_order INTEGER NOT NULL DEFAULT 0
+            );
+            """;
+        cmd.ExecuteNonQuery();
+    }
+
+    /// <summary>Load all persisted timer slots ordered by sort_order.</summary>
+    public List<(string Start, string End, bool IsEnabled)> LoadTimerSlots()
+    {
+        var slots = new List<(string, string, bool)>();
+        using var cmd = _connection.CreateCommand();
+        cmd.CommandText = "SELECT start_time, end_time, is_enabled FROM timer_slots ORDER BY sort_order, id";
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            slots.Add((reader.GetString(0), reader.GetString(1), reader.GetInt64(2) == 1));
+        }
+
+        return slots;
+    }
+
+    /// <summary>Overwrite all timer slots (delete + re-insert).</summary>
+    public void SaveTimerSlots(IReadOnlyList<(string Start, string End, bool IsEnabled)> slots)
+    {
+        using var tx = _connection.BeginTransaction();
+
+        using (var del = _connection.CreateCommand())
+        {
+            del.Transaction = tx;
+            del.CommandText = "DELETE FROM timer_slots";
+            del.ExecuteNonQuery();
+        }
+
+        for (var i = 0; i < slots.Count; i++)
+        {
+            using var ins = _connection.CreateCommand();
+            ins.Transaction = tx;
+            ins.CommandText = """
+                INSERT INTO timer_slots (start_time, end_time, is_enabled, sort_order)
+                VALUES ($s, $e, $en, $o)
+                """;
+            ins.Parameters.AddWithValue("$s", slots[i].Start);
+            ins.Parameters.AddWithValue("$e", slots[i].End);
+            ins.Parameters.AddWithValue("$en", slots[i].IsEnabled ? 1 : 0);
+            ins.Parameters.AddWithValue("$o", i);
+            ins.ExecuteNonQuery();
+        }
+
+        tx.Commit();
     }
 
     private void EnsureColumn(string tableName, string columnName, string definition)

@@ -1,16 +1,6 @@
 namespace TAS.Services;
 
-using System;
-
-public readonly record struct ScheduleConfiguration(
-    bool StartEnabled,
-    TimeOnly? StartTime,
-    bool StopEnabled,
-    TimeOnly? StopTime)
+public sealed record ScheduleConfiguration(IReadOnlyList<TimerSlotConfiguration> Slots)
 {
-    public static ScheduleConfiguration Disabled => new(
-        StartEnabled: false,
-        StartTime: null,
-        StopEnabled: false,
-        StopTime: null);
+    public static ScheduleConfiguration Disabled => new([]);
 }

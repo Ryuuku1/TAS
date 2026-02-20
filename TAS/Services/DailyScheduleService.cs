@@ -11,17 +11,13 @@ public sealed class DailyScheduleService : IDisposable
     private readonly Action _startAction;
     private readonly Action _stopAction;
 
-    private ScheduleConfiguration _configuration;
-    private DateTime? _nextStartAt;
-    private DateTime? _nextStopAt;
+    private List<SlotState> _slots = [];
     private bool _disposed;
 
     public DailyScheduleService(Action startAction, Action stopAction)
     {
         _startAction = startAction;
         _stopAction = stopAction;
-        _configuration = ScheduleConfiguration.Disabled;
-
         _timer = new Timer(OnTick, null, TickInterval, TickInterval);
     }
 
@@ -36,8 +32,16 @@ public sealed class DailyScheduleService : IDisposable
             ThrowIfDisposed();
             ValidateConfiguration(configuration);
 
-            _configuration = configuration;
-            RecalculateNextRunsUnsafe(DateTime.Now);
+            var now = DateTime.Now;
+            _slots = configuration.Slots
+                .Select(s => new SlotState
+                {
+                    Config = s,
+                    NextStartAt = s.IsEnabled && s.Start.HasValue ? NextOccurrence(s.Start.Value, now) : null,
+                    NextStopAt = s.IsEnabled && s.End.HasValue ? NextOccurrence(s.End.Value, now) : null
+                })
+                .ToList();
+
             snapshot = BuildSnapshotUnsafe();
         }
 
@@ -72,6 +76,7 @@ public sealed class DailyScheduleService : IDisposable
     {
         bool shouldStart = false;
         bool shouldStop = false;
+        bool anyFired = false;
         ScheduleSnapshot snapshot;
 
         lock (_sync)
@@ -83,16 +88,29 @@ public sealed class DailyScheduleService : IDisposable
 
             var now = DateTime.Now;
 
-            if (_nextStartAt.HasValue && now >= _nextStartAt.Value)
+            for (var i = 0; i < _slots.Count; i++)
             {
-                shouldStart = true;
-                _nextStartAt = _nextStartAt.Value.AddDays(1);
-            }
+                var slot = _slots[i];
+                if (!slot.Config.IsEnabled)
+                {
+                    continue;
+                }
 
-            if (_nextStopAt.HasValue && now >= _nextStopAt.Value)
-            {
-                shouldStop = true;
-                _nextStopAt = _nextStopAt.Value.AddDays(1);
+                if (slot.NextStartAt.HasValue && now >= slot.NextStartAt.Value)
+                {
+                    shouldStart = true;
+                    anyFired = true;
+                    slot.NextStartAt = slot.NextStartAt.Value.AddDays(1);
+                }
+
+                if (slot.NextStopAt.HasValue && now >= slot.NextStopAt.Value)
+                {
+                    shouldStop = true;
+                    anyFired = true;
+                    slot.NextStopAt = slot.NextStopAt.Value.AddDays(1);
+                }
+
+                _slots[i] = slot;
             }
 
             snapshot = BuildSnapshotUnsafe();
@@ -108,7 +126,7 @@ public sealed class DailyScheduleService : IDisposable
             _stopAction();
         }
 
-        if (shouldStart || shouldStop)
+        if (anyFired)
         {
             ScheduleChanged?.Invoke(snapshot);
         }
@@ -116,37 +134,51 @@ public sealed class DailyScheduleService : IDisposable
 
     private static void ValidateConfiguration(ScheduleConfiguration configuration)
     {
-        if (configuration.StartEnabled && !configuration.StartTime.HasValue)
+        var enabled = configuration.Slots.Where(s => s.IsEnabled).ToList();
+
+        foreach (var slot in enabled)
         {
-            throw new InvalidOperationException("Start time is required when start timer is enabled.");
+            if (slot.Start.HasValue && slot.End.HasValue && slot.Start.Value >= slot.End.Value)
+            {
+                throw new InvalidOperationException(
+                    $"Timer start ({slot.Start.Value:HH:mm}) must be before end ({slot.End.Value:HH:mm}).");
+            }
         }
 
-        if (configuration.StopEnabled && !configuration.StopTime.HasValue)
+        for (var i = 0; i < enabled.Count; i++)
         {
-            throw new InvalidOperationException("Stop time is required when stop timer is enabled.");
+            for (var j = i + 1; j < enabled.Count; j++)
+            {
+                var a = enabled[i];
+                var b = enabled[j];
+                if (!a.End.HasValue || !b.End.HasValue)
+                {
+                    continue;
+                }
+
+                if (!a.Start.HasValue || !b.Start.HasValue)
+                {
+                    continue;
+                }
+
+                if (a.Start.Value < b.End.Value && b.Start.Value < a.End.Value)
+                {
+                    throw new InvalidOperationException(
+                        $"Timers {a.Start.Value:HH:mm}–{a.End.Value:HH:mm} and {b.Start.Value:HH:mm}–{b.End.Value:HH:mm} overlap.");
+                }
+            }
         }
-    }
-
-    private void RecalculateNextRunsUnsafe(DateTime now)
-    {
-        _nextStartAt = _configuration.StartEnabled && _configuration.StartTime.HasValue
-            ? NextOccurrence(_configuration.StartTime.Value, now)
-            : null;
-
-        _nextStopAt = _configuration.StopEnabled && _configuration.StopTime.HasValue
-            ? NextOccurrence(_configuration.StopTime.Value, now)
-            : null;
     }
 
     private ScheduleSnapshot BuildSnapshotUnsafe()
     {
         return new ScheduleSnapshot(
-            StartEnabled: _configuration.StartEnabled,
-            StartTime: _configuration.StartTime,
-            NextStartAt: _nextStartAt,
-            StopEnabled: _configuration.StopEnabled,
-            StopTime: _configuration.StopTime,
-            NextStopAt: _nextStopAt);
+            _slots.Select(s => new TimerSlotSnapshot(
+                s.Config.Start,
+                s.Config.End,
+                s.Config.IsEnabled,
+                s.NextStartAt,
+                s.NextStopAt)).ToList());
     }
 
     private static DateTime NextOccurrence(TimeOnly time, DateTime now)
@@ -161,5 +193,12 @@ public sealed class DailyScheduleService : IDisposable
         {
             throw new ObjectDisposedException(nameof(DailyScheduleService));
         }
+    }
+
+    private struct SlotState
+    {
+        public TimerSlotConfiguration Config;
+        public DateTime? NextStartAt;
+        public DateTime? NextStopAt;
     }
 }

@@ -231,6 +231,8 @@
     <Setter Property="BorderThickness" Value="0" />
     <Setter Property="Padding" Value="11,8" />
     <Setter Property="CornerRadius" Value="999" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
   </Style>
 
   <Style Selector="Button.accent-btn:pointerover">
@@ -244,6 +246,8 @@
     <Setter Property="BorderThickness" Value="0" />
     <Setter Property="Padding" Value="11,8" />
     <Setter Property="CornerRadius" Value="999" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
   </Style>
 
   <Style Selector="Button.neutral-btn:pointerover">

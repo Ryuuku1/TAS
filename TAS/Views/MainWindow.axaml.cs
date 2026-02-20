@@ -105,9 +105,7 @@ public partial class MainWindow : Window
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName is nameof(MainWindowViewModel.StartTimeText)
-            or nameof(MainWindowViewModel.StopTimeText)
-            or nameof(MainWindowViewModel.IsStartTimerEnabled)
-            or nameof(MainWindowViewModel.IsStopTimerEnabled))
+            or nameof(MainWindowViewModel.StopTimeText))
         {
             UpdateDialHandlesFromViewModel();
         }
@@ -251,8 +249,8 @@ public partial class MainWindow : Window
         PositionHandle(startHandle, startTime);
         PositionHandle(stopHandle, stopTime);
 
-        startHandle.Opacity = viewModel.IsStartTimerEnabled ? 1.0 : 0.45;
-        stopHandle.Opacity = viewModel.IsStopTimerEnabled ? 1.0 : 0.45;
+        startHandle.Opacity = 1.0;
+        stopHandle.Opacity = 1.0;
     }
 
     private static TimeOnly ParseTimeOrDefault(string value, TimeOnly fallback)
@@ -362,14 +360,39 @@ public partial class MainWindow : Window
         ViewModel.StartNow();
     }
 
+    private void OnStartPillTapped(object? sender, PointerPressedEventArgs e)
+    {
+        ViewModel.UseStartTime = !ViewModel.UseStartTime;
+        e.Handled = true;
+    }
+
+    private void OnStopPillTapped(object? sender, PointerPressedEventArgs e)
+    {
+        ViewModel.UseStopTime = !ViewModel.UseStopTime;
+        e.Handled = true;
+    }
+
     private void OnStopNowClicked(object? sender, RoutedEventArgs e)
     {
         ViewModel.StopNow();
     }
 
-    private void OnApplyScheduleClicked(object? sender, RoutedEventArgs e)
+    private void OnAddTimerClicked(object? sender, RoutedEventArgs e)
     {
-        ViewModel.ApplySchedule();
+        ViewModel.AddTimer();
+    }
+
+    private void OnRemoveTimerClicked(object? sender, RoutedEventArgs e)
+    {
+        if (sender is Button { DataContext: TimerSlotEntry slot })
+        {
+            ViewModel.RemoveTimer(slot);
+        }
+    }
+
+    private void OnClearTimersClicked(object? sender, RoutedEventArgs e)
+    {
+        ViewModel.ClearSchedule();
     }
 
     private void UpdateRunningAnimation()
